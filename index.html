@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coursera CHI</title>
+    <!-----------------------------------------------Style--------------------------------------------------------------------->
+    <style>
+      /* Dark Theme Variables & Colors */
+      :root {
+        --bg-color: #111827;
+        --text-color: #ffffff;
+        --accent-color: #6565ff;
+        --accent-glow: rgba(101, 101, 255, 0.4);
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --header-bg: rgba(15, 23, 42, 0.6);
+      }
+
+      /* Strict Viewport Lock - No Scrollbars */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+
+      /* Master Layout Container */
+      .app-container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3vh 4vw;
+      }
+
+      /* Header Section */
+      .header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        padding: 1.5vh 3vw;
+        background: var(--header-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+      }
+
+      .institute-logo {
+        height: 50px;
+        width: auto;
+        object-fit: contain;
+      }
+
+      /* Brand Link with Title Glow */
+      a.brand-link {
+        text-decoration: none;
+        font-size: clamp(2rem, 3.5vw, 3.5rem);
+        font-weight: 800;
+        color: var(--text-color);
+        text-shadow: 0 0 20px var(--accent-glow);
+        transition:
+          color 0.3s ease,
+          text-shadow 0.3s ease;
+      }
+
+      a.brand-link:hover {
+        color: var(--accent-color);
+        text-shadow: 0 0 30px var(--accent-color);
+      }
+
+      /* Landing Page Grid (3 Pictures, Completely Static) */
+      .landing_page {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2vw;
+        width: 100%;
+        max-width: 1300px;
+        height: 68vh;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .image-card {
+        width: 100%;
+        height: 100%;
+        border-radius: 24px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .image-frame {
+        width: 100%;
+        height: 100%;
+      }
+
+      .image-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Responsive Handling */
+      @media (max-width: 1024px) {
+        .landing_page {
+          grid-template-columns: 1fr;
+          height: 72vh;
+          gap: 2vh;
+        }
+        .image-card {
+          height: 100%;
+        }
+      }
+    </style>
+    <!------------------------------------------Style------------------------------------------------------------------------------>
+  </head>
+  <body>
+    <!-- Main Container (Locks layout to screen, no scrollbars) -->
+    <div class="app-container">
+      <!-- Header Section -->
+      <header class="header">
+        <div class="logo-wrapper">
+          <img
+            src="Images/CHI.png"
+            alt="Cairo Higher Institute Logo"
+            class="institute-logo"
+          />
+        </div>
+        <a href="auth.html" class="brand-link">Coursera CHI</a>
+      </header>
+
+      <!-- Landing Page Gallery (3 Pictures, Static) -->
+      <main class="landing_page">
+        <div class="image-card">
+          <div class="image-frame">
+            <img src="Images/CHI_building.png" alt="Cairo Higher Institute Building" />
+          </div>
+        </div>
+
+        <div class="image-card">
+          <div class="image-frame">
+            <img
+              src="Images/Military.png"
+              alt="Cairo Higher Institute Military Education Course"
+            />
+          </div>
+        </div>
+
+        <div class="image-card">
+          <div class="image-frame">
+            <img src="Images/graduated.png" alt="Cairo Higher Institute Graduation" />
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
