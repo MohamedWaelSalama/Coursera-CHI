@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Registration System</title>
+    <!-------------------------------------------Style------------------------------------------------------------>
+    <style>
+      /* Global Resets and Variables */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #111827;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      /* Card Container */
+      .auth-container {
+        background-color: #415c95;
+        width: 100%;
+        max-width: 420px;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+
+      .auth-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .auth-header h2 {
+        color: #f8fafc;
+        font-size: 1.4rem;
+        margin-bottom: 6px;
+      }
+
+      .auth-header p {
+        color: #cbd5e1;
+        font-size: 0.875rem;
+      }
+
+      /* Role Selector Tabs */
+      .role-selector {
+        display: flex;
+        background-color: #2e4370;
+        padding: 4px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .role-btn {
+        flex: 1;
+        padding: 10px 0;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #94a3b8;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .role-btn.active {
+        background-color: #ffffff;
+        color: #0e7490;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Form Styling */
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .name-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .form-group.half-width {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f8fafc;
+        margin-bottom: 6px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #64748b;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        outline: none;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+
+      .form-group input:focus {
+        border-color: #22d3ee;
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
+      }
+
+      /* Password Field Wrapper */
+      .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .toggle-pass-btn {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px 8px;
+      }
+
+      .toggle-pass-btn:hover {
+        color: #0f172a;
+      }
+
+      /* Submit Button */
+      .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #0891b2;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-top: 6px;
+      }
+
+      .submit-btn:hover {
+        background-color: #0e7490;
+      }
+
+      /* Status Banner */
+      .status-banner {
+        margin-top: 20px;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      .status-banner.success {
+        background-color: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .status-banner.error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+    <!------------------------------------------Style------------------------------------------------------------------>
+  </head>
+  <body>
+    <div class="auth-container">
+      <!-- System Title / Header -->
+      <div class="auth-header">
+        <h2>New Account</h2>
+      </div>
+
+      <!-- Role Selector (Student / Administrator) -->
+      <div class="role-selector">
+        <button
+          id="studentTabBtn"
+          class="role-btn active"
+          onclick="selectRole('Student')"
+        >
+          Student
+        </button>
+        <button
+          id="adminTabBtn"
+          class="role-btn"
+          onclick="selectRole('Administrator')"
+        >
+          Administrator
+        </button>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="registrationForm" onsubmit="handleRegistrationSubmit(event)">
+        <!-- Dynamic ID Field -->
+        <div class="form-group">
+          <label id="idLabel" for="regId">Student ID</label>
+          <input
+            type="text"
+            id="regId"
+            placeholder="e.g. 2024030136"
+            required
+          />
+        </div>
+
+        <!-- Dynamic Name Fields Container (Side-by-Side for Student) -->
+        <div id="nameFieldsContainer">
+          <div class="name-row">
+            <div class="form-group half-width">
+              <label for="regFirstName">First Name</label>
+              <input
+                type="text"
+                id="regFirstName"
+                placeholder="e.g. Mohamed"
+                required
+              />
+            </div>
+            <div class="form-group half-width">
+              <label for="regLastName">Last Name</label>
+              <input
+                type="text"
+                id="regLastName"
+                placeholder="e.g. Wael"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input
+            type="email"
+            id="regEmail"
+            placeholder="e.g. user@gmail.com"
+            required
+          />
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="regPassword"
+              placeholder="Enter password"
+              required
+            />
+            <button
+              type="button"
+              class="toggle-pass-btn"
+              onclick="togglePasswordVisibility(event)"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+
+        <!-- Academic Year Field (Student Only) -->
+        <div class="form-group" id="academicYearGroup">
+          <label for="regAcademicYear">Academic Year</label>
+          <input type="text" id="regAcademicYear" placeholder="e.g. 3" />
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" id="submitBtn">
+          Register Account
+        </button>
+      </form>
+
+      <!-- Status Banner -->
+      <div id="regStatusBanner" class="status-banner hidden">
+        <span id="regStatusText"></span>
+      </div>
+    </div>
+    <!-----------------------------------------------------Script------------------------------------------------------------>
+    <script>
+      // D1: Users Data Store Mock Records matching Database Schema
+      // const D1_USERS_DATASTORE = {
+      //     Students: [
+      //         {
+      //             Student_ID: "S101",
+      //             First_Name: "John",
+      //             Last_Name: "Doe",
+      //             Password: "pass123",
+      //             Academic_Year: "3",
+      //             Email: "student123@uni.edu"
+      //         }
+      //     ],
+      //     Administrators: [
+      //         {
+      //             Admin_ID: "A01",
+      //             Name: "Admin User",
+      //             Email: "admin@uni.edu",
+      //             Password: "admin123"
+      //         }
+      //     ]
+      // };
+
+      // State tracking active role selection and preserving input values across switches
+      let selectedEntityRole = "Student";
+      let savedStudentData = {
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        academicYear: "",
+      };
+      let savedAdminData = { id: "", name: "", email: "", password: "" };
+
+      /**
+       * Capture current input values before switching roles
+       */
+      function captureCurrentInputValues() {
+        const idVal = document.getElementById("regId")
+          ? document.getElementById("regId").value
+          : "";
+        const emailVal = document.getElementById("regEmail")
+          ? document.getElementById("regEmail").value
+          : "";
+        const passVal = document.getElementById("regPassword")
+          ? document.getElementById("regPassword").value
+          : "";
+
+        if (selectedEntityRole === "Student") {
+          savedStudentData.id = idVal;
+          savedStudentData.firstName = document.getElementById("regFirstName")
+            ? document.getElementById("regFirstName").value
+            : "";
+          savedStudentData.lastName = document.getElementById("regLastName")
+            ? document.getElementById("regLastName").value
+            : "";
+          savedStudentData.email = emailVal;
+          savedStudentData.password = passVal;
+          savedStudentData.academicYear = document.getElementById(
+            "regAcademicYear",
+          )
+            ? document.getElementById("regAcademicYear").value
+            : "";
+        } else {
+          savedAdminData.id = idVal;
+          savedAdminData.name = document.getElementById("regAdminName")
+            ? document.getElementById("regAdminName").value
+            : "";
+          savedAdminData.email = emailVal;
+          savedAdminData.password = passVal;
+        }
+      }
+
+      /**
+       * Switch Active Entity Role (Student / Administrator) and adjust form fields
+       */
+      function selectRole(role) {
+        if (selectedEntityRole === role) return; // Do nothing if clicking the already active role
+
+        // Save whatever the user typed before switching
+        captureCurrentInputValues();
+
+        selectedEntityRole = role;
+
+        const studentBtn = document.getElementById("studentTabBtn");
+        const adminBtn = document.getElementById("adminTabBtn");
+        const idLabel = document.getElementById("idLabel");
+        const nameFieldsContainer = document.getElementById(
+          "nameFieldsContainer",
+        );
+        const academicYearGroup = document.getElementById("academicYearGroup");
+
+        if (role === "Student") {
+          studentBtn.classList.add("active");
+          adminBtn.classList.remove("active");
+
+          idLabel.textContent = "Student ID";
+
+          nameFieldsContainer.innerHTML = `
+            <div class="name-row">
+                <div class="form-group half-width">
+                    <label for="regFirstName">First Name</label>
+                    <input type="text" id="regFirstName" placeholder="e.g. Mohamed" required>
+                </div>
+                <div class="form-group half-width">
+                    <label for="regLastName">Last Name</label>
+                    <input type="text" id="regLastName" placeholder="e.g. Wael" required>
+                </div>
+            </div>
+        `;
+          academicYearGroup.style.display = "block";
+          document
+            .getElementById("regAcademicYear")
+            .setAttribute("required", "true");
+
+          // Restore saved student values
+          document.getElementById("regId").value = savedStudentData.id;
+          document.getElementById("regId").placeholder = "e.g. 2024030136";
+          document.getElementById("regFirstName").value =
+            savedStudentData.firstName;
+          document.getElementById("regLastName").value =
+            savedStudentData.lastName;
+          document.getElementById("regEmail").value = savedStudentData.email;
+          document.getElementById("regPassword").value =
+            savedStudentData.password;
+          document.getElementById("regAcademicYear").value =
+            savedStudentData.academicYear;
+        } else {
+          adminBtn.classList.add("active");
+          studentBtn.classList.remove("active");
+
+          idLabel.textContent = "Admin ID";
+
+          nameFieldsContainer.innerHTML = `
+            <div class="form-group">
+                <label for="regAdminName">Name</label>
+                <input type="text" id="regAdminName" placeholder="e.g. Admin User" required>
+            </div>
+        `;
+          academicYearGroup.style.display = "none";
+          document
+            .getElementById("regAcademicYear")
+            .removeAttribute("required");
+
+          // Restore saved admin values
+          document.getElementById("regId").value = savedAdminData.id;
+          document.getElementById("regId").placeholder = "e.g. A01";
+          document.getElementById("regAdminName").value = savedAdminData.name;
+          document.getElementById("regEmail").value = savedAdminData.email;
+          document.getElementById("regPassword").value =
+            savedAdminData.password;
+        }
+
+        hideRegistrationStatus();
+      }
+
+      /**
+       * Handle form submission logic, packing variables matching MySQL database schema
+       */
+      async function handleRegistrationSubmit(event) {
+        event.preventDefault();
+
+        let registrationPayload = {};
+
+        if (selectedEntityRole === "Student") {
+          registrationPayload = {
+            role: "Student",
+            Student_ID: document.getElementById("regId").value.trim(),
+            First_Name: document.getElementById("regFirstName").value.trim(),
+            Last_Name: document.getElementById("regLastName").value.trim(),
+            Email: document.getElementById("regEmail").value.trim(),
+            Password: document.getElementById("regPassword").value.trim(),
+            Academic_Year: document
+              .getElementById("regAcademicYear")
+              .value.trim(),
+          };
+        } else {
+          registrationPayload = {
+            role: "Administrator",
+            Admin_ID: document.getElementById("regId").value.trim(),
+            Name: document.getElementById("regAdminName").value.trim(),
+            Email: document.getElementById("regEmail").value.trim(),
+            Password: document.getElementById("regPassword").value.trim(),
+          };
+        }
+
+        try {
+          console.log("Ready to insert into MySQL:", registrationPayload);
+
+          displayRegistrationStatus({
+            success: true,
+            message: `Form payload compiled successfully for ${selectedEntityRole}! Connect this JS to your backend API to save data into MySQL.`,
+          });
+        } catch (error) {
+          displayRegistrationStatus({
+            success: false,
+            message: "Failed to connect to backend server.",
+          });
+        }
+      }
+
+      /**
+       * Render Status response banner to user
+       */
+      function displayRegistrationStatus(statusObj) {
+        const banner = document.getElementById("regStatusBanner");
+        const statusText = document.getElementById("regStatusText");
+
+        banner.classList.remove("hidden", "success", "error");
+
+        if (statusObj.success) {
+          banner.classList.add("success");
+        } else {
+          banner.classList.add("error");
+        }
+
+        statusText.textContent = statusObj.message;
+      }
+
+      /**
+       * Hide status banner
+       */
+      function hideRegistrationStatus() {
+        const banner = document.getElementById("regStatusBanner");
+        banner.classList.add("hidden");
+      }
+
+      /**
+       * Toggle Password Visibility Input Field
+       */
+      function togglePasswordVisibility(event) {
+        const passInput = document.getElementById("regPassword");
+        const toggleBtn = event.target;
+
+        if (passInput.type === "password") {
+          passInput.type = "text";
+          toggleBtn.textContent = "Hide";
+        } else {
+          passInput.type = "password";
+          toggleBtn.textContent = "Show";
+        }
+      }
+
+      /**
+       * Toggle visibility of Schema Info Drawer
+       */
+      function toggleDataStoreInspector() {
+        const modal = document.getElementById("dataStoreModal");
+        if (modal) {
+          modal.classList.toggle("hidden");
+        }
+      }
+    </script>
+    <!-------------------------------------------Script------------------------------------------------------------------------------>
+  </body>
+</html>
