@@ -8,7 +8,7 @@ CORS(app)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '2004-9-27',
+    'password': 'Your password of mysql',
 }
 
 def init_mysql_database():
