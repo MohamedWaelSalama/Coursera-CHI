@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coursera CHI - Authentication</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background-color: #111827;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+      .auth-container {
+        background-color: #415c95;
+        width: 100%;
+        max-width: 420px;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .auth-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .auth-header h2 {
+        color: #f8fafc;
+        font-size: 1.4rem;
+        margin-bottom: 6px;
+      }
+      .mode-selector {
+        display: flex;
+        background-color: #1e293b;
+        padding: 4px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      .mode-btn {
+        flex: 1;
+        padding: 8px 0;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .mode-btn.active {
+        background-color: #0891b2;
+        color: #ffffff;
+      }
+      .role-selector {
+        display: flex;
+        background-color: #2e4370;
+        padding: 4px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .role-btn {
+        flex: 1;
+        padding: 10px 0;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #94a3b8;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .role-btn.active {
+        background-color: #ffffff;
+        color: #0e7490;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .name-row {
+        display: flex;
+        gap: 10px;
+      }
+      .form-group.half-width {
+        flex: 1;
+        min-width: 0;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f8fafc;
+        margin-bottom: 6px;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #64748b;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        outline: none;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .toggle-pass-btn {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #64748b;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px 8px;
+      }
+      .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #0891b2;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-top: 6px;
+      }
+      .submit-btn:hover {
+        background-color: #0e7490;
+      }
+      .status-banner {
+        margin-top: 20px;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-align: center;
+      }
+      .status-banner.success {
+        background-color: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+      .status-banner.error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-header">
+        <h2 id="formTitle">New Account Registration</h2>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-selector">
+        <button id="registerModeBtn" class="mode-btn active" type="button" onclick="switchMode('register')">Register</button>
+        <button id="loginModeBtn" class="mode-btn" type="button" onclick="switchMode('login')">Log In</button>
+      </div>
+
+      <!-- Role Selector -->
+      <div class="role-selector">
+        <button id="studentTabBtn" class="role-btn active" type="button" onclick="selectRole('Student')">Student</button>
+        <button id="adminTabBtn" class="role-btn" type="button" onclick="selectRole('Administrator')">Administrator</button>
+      </div>
+
+      <form id="authForm" onsubmit="handleFormSubmit(event)">
+        <!-- Registration-Only Fields Container -->
+        <div id="registerFields">
+          <div class="form-group">
+            <label id="idLabel" for="regId">Student ID</label>
+            <input type="text" id="regId" placeholder="e.g. 2024030136" />
+          </div>
+
+          <div id="nameFieldsContainer">
+            <div class="name-row">
+              <div class="form-group half-width">
+                <label for="regFirstName">First Name</label>
+                <input type="text" id="regFirstName" placeholder="e.g. Mohamed" />
+              </div>
+              <div class="form-group half-width">
+                <label for="regLastName">Last Name</label>
+                <input type="text" id="regLastName" placeholder="e.g. Wael" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="academicYearGroup">
+            <label for="regAcademicYear">Academic Year</label>
+            <input type="text" id="regAcademicYear" placeholder="e.g. 3" />
+          </div>
+        </div>
+
+        <!-- Common Fields (Email & Password) -->
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="e.g. user@gmail.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="regPassword" placeholder="Enter password" required />
+            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility(event)">Show</button>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Register Account</button>
+      </form>
+
+      <div id="regStatusBanner" class="status-banner hidden">
+        <span id="regStatusText"></span>
+      </div>
+    </div>
+
+    <script>
+      let currentMode = "register"; // "register" or "login"
+      let selectedEntityRole = "Student"; // "Student" or "Administrator"
+
+      function switchMode(mode) {
+        currentMode = mode;
+        const regBtn = document.getElementById("registerModeBtn");
+        const logBtn = document.getElementById("loginModeBtn");
+        const formTitle = document.getElementById("formTitle");
+        const submitBtn = document.getElementById("submitBtn");
+        const registerFields = document.getElementById("registerFields");
+
+        document.getElementById("regStatusBanner").classList.add("hidden");
+
+        if (mode === "register") {
+          regBtn.classList.add("active");
+          logBtn.classList.remove("active");
+          formTitle.textContent = "New Account Registration";
+          submitBtn.textContent = "Register Account";
+          registerFields.style.display = "block";
+          setRequiredFields(true);
+        } else {
+          logBtn.classList.add("active");
+          regBtn.classList.remove("active");
+          formTitle.textContent = "Existing User Login";
+          submitBtn.textContent = "Log In";
+          registerFields.style.display = "none";
+          setRequiredFields(false);
+        }
+      }
+
+      function selectRole(role) {
+        selectedEntityRole = role;
+        const studentBtn = document.getElementById("studentTabBtn");
+        const adminBtn = document.getElementById("adminTabBtn");
+
+        if (role === "Student") {
+          studentBtn.classList.add("active");
+          adminBtn.classList.remove("active");
+          document.getElementById("idLabel").textContent = "Student ID";
+          document.getElementById("academicYearGroup").style.display = "block";
+          document.getElementById("nameFieldsContainer").innerHTML = `
+            <div class="name-row">
+              <div class="form-group half-width">
+                <label for="regFirstName">First Name</label>
+                <input type="text" id="regFirstName" placeholder="e.g. Mohamed" />
+              </div>
+              <div class="form-group half-width">
+                <label for="regLastName">Last Name</label>
+                <input type="text" id="regLastName" placeholder="e.g. Wael" />
+              </div>
+            </div>
+          `;
+        } else {
+          adminBtn.classList.add("active");
+          studentBtn.classList.remove("active");
+          document.getElementById("idLabel").textContent = "Admin ID";
+          document.getElementById("academicYearGroup").style.display = "none";
+          document.getElementById("nameFieldsContainer").innerHTML = `
+            <div class="form-group">
+              <label for="regAdminName">Name</label>
+              <input type="text" id="regAdminName" placeholder="e.g. Admin User" />
+            </div>
+          `;
+        }
+        if (currentMode === "register") {
+          setRequiredFields(true);
+        }
+      }
+
+      function setRequiredFields(isRequired) {
+        const fields = ["regId", "regFirstName", "regLastName", "regAcademicYear", "regAdminName"];
+        fields.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            if (isRequired) {
+              el.setAttribute("required", "true");
+            } else {
+              el.removeAttribute("required");
+            }
+          }
+        });
+      }
+
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+        const banner = document.getElementById("regStatusBanner");
+        const statusText = document.getElementById("regStatusText");
+        banner.classList.remove("hidden", "success", "error");
+
+        if (currentMode === "register") {
+          let payload = {
+            role: selectedEntityRole,
+            Email: document.getElementById("regEmail").value.trim(),
+            Password: document.getElementById("regPassword").value.trim()
+          };
+
+          if (selectedEntityRole === "Student") {
+            payload.Student_ID = document.getElementById("regId").value.trim();
+            payload.First_Name = document.getElementById("regFirstName").value.trim();
+            payload.Last_Name = document.getElementById("regLastName").value.trim();
+            payload.Academic_Year = document.getElementById("regAcademicYear").value.trim();
+          } else {
+            payload.Admin_ID = document.getElementById("regId").value.trim();
+            payload.Name = document.getElementById("regAdminName").value.trim();
+          }
+
+          try {
+            const response = await fetch('https://localhost:3000/api/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.success) {
+              banner.classList.add("success");
+              payload.role = selectedEntityRole;
+              localStorage.setItem("currentUser", JSON.stringify(payload));
+              statusText.innerHTML = `${result.message}<br><br><a href="${selectedEntityRole === 'Administrator' ? 'admin.html' : 'Option.html'}"><button class="submit-btn" style="padding:8px; cursor:pointer;">Proceed Now</button></a>`;
+            } else {
+              banner.classList.add("error");
+              statusText.textContent = result.message || "Registration failed.";
+            }
+          } catch (err) {
+            banner.classList.add("error");
+            statusText.textContent = "Server connection error.";
+          }
+
+        } else {
+          // Log In Mode
+          const loginPayload = {
+            role: selectedEntityRole,
+            Email: document.getElementById("regEmail").value.trim(),
+            Password: document.getElementById("regPassword").value.trim()
+          };
+
+          try {
+            const response = await fetch('https://localhost:3000/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(loginPayload)
+            });
+            const result = await response.json();
+
+            if (result.success) {
+              banner.classList.add("success");
+              let userObj = result.user;
+              userObj.role = selectedEntityRole;
+              localStorage.setItem("currentUser", JSON.stringify(userObj));
+              statusText.textContent = "Login successful! Redirecting...";
+              setTimeout(() => {
+                window.location.href = result.redirect;
+              }, 800);
+            } else {
+              banner.classList.add("error");
+              statusText.textContent = result.message || "Invalid credentials.";
+            }
+          } catch (err) {
+            banner.classList.add("error");
+            statusText.textContent = "Server connection error during login.";
+          }
+        }
+      }
+
+      function togglePasswordVisibility(event) {
+        const passInput = document.getElementById("regPassword");
+        const toggleBtn = event.target;
+        if (passInput.type === "password") {
+          passInput.type = "text";
+          toggleBtn.textContent = "Hide";
+        } else {
+          passInput.type = "password";
+          toggleBtn.textContent = "Show";
+        }
+      }
+    </script>
+  </body>
+</html>

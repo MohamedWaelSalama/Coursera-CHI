@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coursera CHI - Administrator Dashboard</title>
+</head>
+<body style="background-color: #111827; margin: 0; color: white; font-family: sans-serif;">
+
+    <header style="display: flex; justify-content: space-between; align-items: center; background-color: #324725; padding: 12px 24px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="auth.html" style="color: #9ca3af; text-decoration: none; font-size: 20px;">&larr; Logout</a>
+            <h1 style="margin: 0; font-size: 24px;">Administrator Portal</h1>
+        </div>
+        <span style="font-size: 14px; background-color: #1f2937; padding: 6px 12px; border-radius: 6px;">Admin Mode</span>
+    </header>
+
+    <main style="max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 40px;">
+
+        <!-- Course Management Section -->
+        <section style="background-color: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 24px;">
+            <h2 style="color: #f9fafb; font-size: 20px; margin-top: 0; margin-bottom: 16px;">Course Management (MySQL Database)</h2>
+            
+            <form id="addCourseForm" onsubmit="handleAddCourse(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; background-color: #111827; padding: 16px; border-radius: 8px; border: 1px solid #374151;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Course Code</label>
+                    <input type="text" id="courseCode" placeholder="e.g. CS401" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Course Name</label>
+                    <input type="text" id="courseName" placeholder="e.g. Operating Systems" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Credits</label>
+                    <input type="number" id="courseCredits" value="3" min="1" max="6" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Capacity</label>
+                    <input type="number" id="courseCapacity" value="45" min="5" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Day</label>
+                    <select id="courseDay" style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                        <option value="Sunday">Sunday</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1 / -1; text-align: right; margin-top: 8px;">
+                    <button type="submit" style="background-color: #324725; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">+ Add New Course</button>
+                </div>
+            </form>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background-color: #111827; border-radius: 8px; overflow: hidden;">
+                    <thead>
+                        <tr style="background-color: #374151; text-align: left; font-size: 13px;">
+                            <th style="padding: 10px 14px;">Code</th>
+                            <th style="padding: 10px 14px;">Course Name</th>
+                            <th style="padding: 10px 14px;">Credits</th>
+                            <th style="padding: 10px 14px;">Capacity</th>
+                            <th style="padding: 10px 14px;">Day</th>
+                            <th style="padding: 10px 14px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coursesTableBody" style="font-size: 13px;"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Student Database Section -->
+        <section style="background-color: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 24px;">
+            <h2 style="color: #f9fafb; font-size: 20px; margin-top: 0; margin-bottom: 16px;">Registered Students Database</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background-color: #111827; border-radius: 8px; overflow: hidden;">
+                    <thead>
+                        <tr style="background-color: #374151; text-align: left; font-size: 13px;">
+                            <th style="padding: 10px 14px;">Student ID</th>
+                            <th style="padding: 10px 14px;">First Name</th>
+                            <th style="padding: 10px 14px;">Last Name</th>
+                            <th style="padding: 10px 14px;">Email</th>
+                            <th style="padding: 10px 14px;">Year</th>
+                            <th style="padding: 10px 14px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" style="font-size: 13px;"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        async function fetchCourses() {
+            try {
+                const res = await fetch('https://localhost:3000/api/courses');
+                const data = await res.json();
+                const tbody = document.getElementById("coursesTableBody");
+                tbody.innerHTML = "";
+
+                if (data.success && data.courses.length > 0) {
+                    data.courses.forEach((c) => {
+                        const tr = document.createElement("tr");
+                        tr.style.borderBottom = "1px solid #374151";
+                        tr.innerHTML = `
+                            <td style="padding: 10px 14px; font-weight: 600; color: #60a5fa;">${c.Course_Code}</td>
+                            <td style="padding: 10px 14px;">${c.Course_Name}</td>
+                            <td style="padding: 10px 14px;">${c.Credit_Hours}</td>
+                            <td style="padding: 10px 14px;">${c.Max_Capacity}</td>
+                            <td style="padding: 10px 14px;">${c.Day || 'Sunday'}</td>
+                            <td style="padding: 10px 14px; text-align: center;">
+                                <button onclick="deleteCourse('${c.Course_Code}')" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 16px; text-align: center; color: #9ca3af;">No courses found in database.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Failed to load courses", err);
+            }
+        }
+
+        async function handleAddCourse(event) {
+            event.preventDefault();
+            const payload = {
+                Course_Code: document.getElementById("courseCode").value.trim().toUpperCase(),
+                Course_Name: document.getElementById("courseName").value.trim(),
+                Credit_Hours: parseInt(document.getElementById("courseCredits").value) || 3,
+                Max_Capacity: parseInt(document.getElementById("courseCapacity").value) || 45,
+                Day: document.getElementById("courseDay").value
+            };
+
+            try {
+                const res = await fetch('https://localhost:3000/api/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("addCourseForm").reset();
+                    fetchCourses();
+                } else {
+                    alert(data.message || "Failed to add course.");
+                }
+            } catch (err) {
+                alert("Server error connecting to backend.");
+            }
+        }
+
+        async function deleteCourse(courseCode) {
+            if (!confirm(`Are you sure you want to delete course ${courseCode}?`)) return;
+            try {
+                const res = await fetch(`https://localhost:3000/api/courses/${courseCode}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    fetchCourses();
+                } else {
+                    alert("Failed to delete course.");
+                }
+            } catch (err) {
+                alert("Server error during deletion.");
+            }
+        }
+
+        async function fetchStudents() {
+            try {
+                const res = await fetch('https://localhost:3000/api/students');
+                const data = await res.json();
+                const tbody = document.getElementById("studentTableBody");
+                tbody.innerHTML = "";
+
+                if (data.success && data.students.length > 0) {
+                    data.students.forEach(st => {
+                        const tr = document.createElement("tr");
+                        tr.style.borderBottom = "1px solid #374151";
+                        tr.innerHTML = `
+                            <td style="padding: 10px 14px;">${st.Student_ID}</td>
+                            <td style="padding: 10px 14px;">${st.First_Name}</td>
+                            <td style="padding: 10px 14px;">${st.Last_Name}</td>
+                            <td style="padding: 10px 14px;">${st.Email}</td>
+                            <td style="padding: 10px 14px;">${st.Academic_Year}</td>
+                            <td style="padding: 10px 14px; text-align: center;">
+                                <button onclick="deleteStudent('${st.Student_ID}')" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Delete Student</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 16px; text-align: center; color: #9ca3af;">No students registered in the database yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Failed to load students", err);
+            }
+        }
+
+        async function deleteStudent(studentId) {
+            if (!confirm(`Are you sure you want to delete student ID ${studentId}?`)) return;
+            try {
+                const res = await fetch(`https://localhost:3000/api/students/${studentId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    fetchStudents();
+                } else {
+                    alert("Failed to delete student.");
+                }
+            } catch (err) {
+                alert("Server error during deletion.");
+            }
+        }
+
+        fetchCourses();
+        fetchStudents();
+    </script>
+</body>
+</html>

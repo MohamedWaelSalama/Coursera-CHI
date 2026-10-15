@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coursera CHI - Available Courses</title>
+</head>
+<body style="background-color: #111827; margin: 0; color: white; font-family: sans-serif;">
+
+    <header style="display: flex; justify-content: space-between; align-items: center; background-color: #324725; padding: 12px 24px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="Option.html" style="color: #9ca3af; text-decoration: none; font-size: 20px;">&larr; Back</a>
+            <h1 style="margin: 0; font-size: 24px;">Available Courses Catalog</h1>
+        </div>
+        <a href="profile.html" title="View Profile">
+            <img src="Images/Gemenai 2.jpg" alt="Profile Icon" width="50" style="border-radius: 50%; display: block; cursor: pointer;">
+        </a>
+    </header>
+
+    <main style="max-width: 1100px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #f9fafb; font-size: 20px; margin-bottom: 16px;">Select Courses to Register or Drop</h2>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background-color: #1f2937; border-radius: 8px; overflow: hidden;">
+                <thead>
+                    <tr style="background-color: #374151; text-align: left; font-size: 13px;">
+                        <th style="padding: 12px 16px;">Code</th>
+                        <th style="padding: 12px 16px;">Course Name</th>
+                        <th style="padding: 12px 16px;">Credits</th>
+                        <th style="padding: 12px 16px;">Day & Time</th>
+                        <th style="padding: 12px 16px;">Location</th>
+                        <th style="padding: 12px 16px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="coursesCatalogBody" style="font-size: 13px;"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        function getCurrentStudent() {
+            const stored = localStorage.getItem("currentUser");
+            if (stored) {
+                try {
+                    const user = JSON.parse(stored);
+                    return user.Student_ID ? user : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        async function fetchCatalogAndEnrollments() {
+            const student = getCurrentStudent();
+            if (!student) {
+                alert("Please log in as a student first!");
+                window.location.href = "auth.html";
+                return;
+            }
+
+            try {
+                const [coursesRes, enrolledRes] = await Promise.all([
+                    fetch('https://localhost:3000/api/courses'),
+                    fetch(`https://localhost:3000/api/students/${student.Student_ID}/courses`)
+                ]);
+
+                const coursesData = await coursesRes.json();
+                const enrolledData = await enrolledRes.json();
+
+                const allCourses = coursesData.success ? coursesData.courses : [];
+                const enrolledCourses = enrolledData.success ? enrolledData.courses : [];
+                const enrolledCodes = new Set(enrolledCourses.map(c => c.Course_Code));
+
+                const tbody = document.getElementById("coursesCatalogBody");
+                tbody.innerHTML = "";
+
+                if (allCourses.length > 0) {
+                    allCourses.forEach((c) => {
+                        const isEnrolled = enrolledCodes.has(c.Course_Code);
+                        const tr = document.createElement("tr");
+                        tr.style.borderBottom = "1px solid #374151";
+                        tr.innerHTML = `
+                            <td style="padding: 12px 16px; font-weight: 600; color: #60a5fa;">${c.Course_Code}</td>
+                            <td style="padding: 12px 16px;">${c.Course_Name}</td>
+                            <td style="padding: 12px 16px;">${c.Credit_Hours}</td>
+                            <td style="padding: 12px 16px;">${c.Day || 'Sunday'} (${c.Start_Time || '09:00 AM'})</td>
+                            <td style="padding: 12px 16px;">${c.Location || 'Lec 101'}</td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                ${isEnrolled 
+                                    ? `<button onclick="toggleEnrollment('${c.Course_Code}', true)" style="background-color: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Drop</button>`
+                                    : `<button onclick="toggleEnrollment('${c.Course_Code}', false)" style="background-color: #324725; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Register</button>`
+                                }
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #9ca3af;">No courses available in the database.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Failed to load catalog or enrollments", err);
+            }
+        }
+
+        async function toggleEnrollment(courseCode, isCurrentlyEnrolled) {
+            const student = getCurrentStudent();
+            if (!student) return;
+
+            const endpoint = isCurrentlyEnrolled ? 'https://localhost:3000/api/drop' : 'https://localhost:3000/api/enroll';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        Student_ID: student.Student_ID,
+                        Course_Code: courseCode
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    fetchCatalogAndEnrollments(); // Refresh table state instantly
+                } else {
+                    alert(result.message || "Operation failed.");
+                }
+            } catch (err) {
+                alert("Server error connecting to database.");
+            }
+        }
+
+        fetchCatalogAndEnrollments();
+    </script>
+</body>
+</html>
