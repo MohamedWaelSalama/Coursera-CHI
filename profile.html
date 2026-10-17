@@ -8,10 +8,11 @@
     
     <header style="display: flex; justify-content: space-between; align-items: center; background-color: #324725; padding: 12px 24px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-            <a href="Option.html" style="color: #9ca3af; text-decoration: none; font-size: 20px;">&larr; Back</a>
+            <a id="backLink" href="Option.html" style="color: #9ca3af; text-decoration: none; font-size: 20px;">&larr; Back</a>
             <h1 style="margin: 0; font-size: 24px;">My Profile</h1>
         </div>
-        <a href="profile.html" title="View Profile">
+        <!-- Profile Icon acts as a toggle back to the main interface -->
+        <a id="profileIconLink" href="#" title="Return to Dashboard">
             <img src="Images/Gemenai 2.jpg" alt="Profile Icon" width="50" style="border-radius: 50%; display: block; cursor: pointer;">
         </a>
     </header>
@@ -20,26 +21,26 @@
         <div style="text-align: center; margin-bottom: 24px;">
             <img src="Images/Gemenai 2.jpg" alt="Profile Picture" width="90" style="border-radius: 50%; border: 3px solid #324725; margin-bottom: 12px;">
             <h2 id="profileName" style="margin: 0; color: #f9fafb;">Loading...</h2>
-            <p id="profileRole" style="color: #60a5fa; font-size: 14px; margin-top: 4px;">Student Account</p>
+            <p id="profileRole" style="color: #60a5fa; font-size: 14px; margin-top: 4px;">Account</p>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px; font-size: 15px;">
             <div style="display: flex; justify-content: space-between; background-color: #111827; padding: 12px 16px; border-radius: 6px; border: 1px solid #374151;">
-                <span style="color: #9ca3af;">ID Number:</span>
+                <span id="idLabel" style="color: #9ca3af;">ID Number:</span>
                 <strong id="profileId" style="color: white;">---</strong>
             </div>
             <div style="display: flex; justify-content: space-between; background-color: #111827; padding: 12px 16px; border-radius: 6px; border: 1px solid #374151;">
                 <span style="color: #9ca3af;">Email Address:</span>
                 <strong id="profileEmail" style="color: white;">---</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; background-color: #111827; padding: 12px 16px; border-radius: 6px; border: 1px solid #374151;">
+            <div id="yearRow" style="display: flex; justify-content: space-between; background-color: #111827; padding: 12px 16px; border-radius: 6px; border: 1px solid #374151;">
                 <span style="color: #9ca3af;">Academic Year:</span>
                 <strong id="profileYear" style="color: white;">---</strong>
             </div>
         </div>
 
         <div style="margin-top: 24px; text-align: center;">
-            <a href="auth.html" style="background-color: #ef4444; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">Log Out</a>
+            <button onclick="handleLogout()" style="background-color: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">Log Out</button>
         </div>
     </main>
 
@@ -48,22 +49,39 @@
         if (cachedUser) {
             try {
                 const user = JSON.parse(cachedUser);
+                const backLink = document.getElementById("backLink");
+                const profileIconLink = document.getElementById("profileIconLink");
+
                 if (user.role === "Student") {
+                    // Student View
+                    backLink.href = "Option.html";
+                    profileIconLink.href = "Option.html"; // Clicking icon returns to student dashboard
                     document.getElementById("profileName").textContent = `${user.First_Name || ''} ${user.Last_Name || ''}`;
+                    document.getElementById("idLabel").textContent = "Student ID:";
                     document.getElementById("profileId").textContent = user.Student_ID || 'N/A';
                     document.getElementById("profileEmail").textContent = user.Email || 'N/A';
                     document.getElementById("profileYear").textContent = user.Academic_Year || 'N/A';
                     document.getElementById("profileRole").textContent = "Student Mode";
                 } else {
-                    document.getElementById("profileName").textContent = user.Name || 'Admin User';
+                    // Administrator View
+                    backLink.style.display = "none";
+                    profileIconLink.href = "admin.html"; // Clicking icon returns to admin dashboard
+                    document.getElementById("profileName").textContent = user.Name || 'Administrator';
+                    document.getElementById("idLabel").textContent = "Admin ID:";
                     document.getElementById("profileId").textContent = user.Admin_ID || 'N/A';
                     document.getElementById("profileEmail").textContent = user.Email || 'N/A';
-                    document.getElementById("profileYear").textContent = "Administrator";
+                    
+                    document.getElementById("yearRow").style.display = "none";
                     document.getElementById("profileRole").textContent = "Administrator Mode";
                 }
             } catch (e) {
                 console.error("Error parsing user data");
             }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("currentUser");
+            window.location.href = "auth.html";
         }
     </script>
 </body>
