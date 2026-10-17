@@ -1,6 +1,9 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 import mysql.connector
+import random
+import smtplib
+from email.mime.text import MIMEText
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
@@ -8,11 +11,78 @@ CORS(app)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Your password of mysql',
+    'password': 'enter Your MYSQL password here',
 }
 
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SENDER_EMAIL = "ay178538@gmail.com"
+SENDER_PASSWORD = "fotwplarvdmgqlku"
+
+def send_otp_email(receiver_email, otp_code):
+    """Sends a freshly generated, unique 6-digit verification code to the user's email."""
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Your Verification Code</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px 20px;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; background: #ffffff; padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center;">
+            <tr>
+                <td>
+                    <h2 style="color: #1e293b; font-size: 24px; margin-top: 0; margin-bottom: 16px; font-weight: bold;">Verify Your Account</h2>
+                    <p style="color: #475569; font-size: 15px; line-height: 1.5; margin-bottom: 24px;">
+                        Enter the following verification code on the website to activate your account:
+                    </p>
+                    <div style="font-size: 32px; font-weight: bold; color: #3b82f6; letter-spacing: 6px; background: #f1f5f9; padding: 15px; border-radius: 8px; display: inline-block; margin-bottom: 24px;">
+                        {otp_code}
+                    </div>
+                    <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">If you didn't request this, you can safely ignore this email.</p>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+    msg = MIMEText(html_body, 'html', 'utf-8')
+    msg['Subject'] = "Your Verification Code"
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = receiver_email
+
+    try:
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"⚠️ Failed to send email: {e}")
+        return False
+
+def send_reset_email(receiver_email, token):
+    reset_link = f"https://localhost:3000/api/reset-password/{token}"
+    msg_body = f"Hello,\n\nPlease click on the following link to reset your password:\n{reset_link}\n\nIf you did not request this, please ignore this email."
+    msg = MIMEText(msg_body, 'plain', 'utf-8')
+    msg['Subject'] = "Password Reset Request"
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = receiver_email
+
+    try:
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"⚠️ Failed to send reset email: {e}")
+        return False
+
 def init_mysql_database():
-    """Automatically creates the MySQL database and tables if they don't exist yet."""
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
@@ -25,7 +95,6 @@ def init_mysql_database():
         conn = mysql.connector.connect(**db_config_full)
         cursor = conn.cursor()
 
-        # Table 1: Students
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Students (
                 Student_ID VARCHAR(50) NOT NULL,
@@ -34,26 +103,30 @@ def init_mysql_database():
                 Email VARCHAR(150) NOT NULL,
                 Password VARCHAR(255) NOT NULL,
                 Academic_Year VARCHAR(10) NOT NULL,
+                is_verified BOOLEAN DEFAULT FALSE,
+                verification_token VARCHAR(255) DEFAULT NULL,
+                reset_token VARCHAR(255) DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (Student_ID),
                 UNIQUE KEY uq_student_email (Email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
 
-        # Table 1b: Administrators
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Administrators (
                 Admin_ID VARCHAR(50) NOT NULL,
                 Name VARCHAR(150) NOT NULL,
                 Email VARCHAR(150) NOT NULL,
                 Password VARCHAR(255) NOT NULL,
+                is_verified BOOLEAN DEFAULT FALSE,
+                verification_token VARCHAR(255) DEFAULT NULL,
+                reset_token VARCHAR(255) DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (Admin_ID),
                 UNIQUE KEY uq_admin_email (Email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
 
-        # Table 2: Courses Catalog
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Courses (
                 Course_Code VARCHAR(20) NOT NULL,
@@ -68,7 +141,6 @@ def init_mysql_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
 
-        # Table 3: Student-Course Enrollments (Junction Table)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Student_Courses (
                 Enrollment_ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -81,7 +153,7 @@ def init_mysql_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
 
-        # Seed default courses into MySQL if the table is empty
+        # Seed default courses automatically if the table is empty
         cursor.execute("SELECT COUNT(*) FROM Courses")
         count = cursor.fetchone()[0]
         if count == 0:
@@ -95,12 +167,10 @@ def init_mysql_database():
                 INSERT IGNORE INTO Courses (Course_Code, Course_Name, Credit_Hours, Max_Capacity, Day, Start_Time, End_Time, Location)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, default_courses)
-            print("📦 Default courses seeded into MySQL successfully!")
 
         conn.commit()
         cursor.close()
         conn.close()
-        print("✅ MySQL Database and all tables verified successfully!")
     except Exception as err:
         print(f"⚠️ MySQL Initialization Error: {err}")
 
@@ -119,30 +189,73 @@ def serve_root():
 def serve_static_files(filename):
     return send_from_directory('.', filename)
 
-# ==================== Authentication APIs ====================
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
     role = data.get('role')
+    email = data.get('Email')
+    
+    # Generates a completely new random 6-digit code dynamically on every registration request
+    otp_code = str(random.randint(100000, 999999))
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         if role == 'Student':
             cursor.execute("""
-                INSERT INTO Students (Student_ID, First_Name, Last_Name, Email, Password, Academic_Year) 
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO Students (Student_ID, First_Name, Last_Name, Email, Password, Academic_Year, is_verified, verification_token) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (data.get('Student_ID'), data.get('First_Name'), data.get('Last_Name'),
-                  data.get('Email'), data.get('Password'), data.get('Academic_Year')))
-            conn.commit()
-            return jsonify({"success": True, "message": "Student registered successfully!"})
+                  email, data.get('Password'), data.get('Academic_Year'), False, otp_code))
+            
         elif role == 'Administrator':
             cursor.execute("""
-                INSERT INTO Administrators (Admin_ID, Name, Email, Password) 
-                VALUES (%s, %s, %s, %s)
-            """, (data.get('Admin_ID'), data.get('Name'), data.get('Email'), data.get('Password')))
-            conn.commit()
-            return jsonify({"success": True, "message": "Administrator registered successfully!"})
-        return jsonify({"success": False, "message": "Invalid role specified."}), 400
+                INSERT INTO Administrators (Admin_ID, Name, Email, Password, is_verified, verification_token) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (data.get('Admin_ID'), data.get('Name'), email, data.get('Password'), False, otp_code))
+        else:
+            return jsonify({"success": False, "message": "Invalid role specified."}), 400
+        
+        conn.commit()
+        
+        email_sent = send_otp_email(email, otp_code)
+        msg = "Registration successful! Please enter the 6-digit code sent to your email." if email_sent else "Registration successful, but failed to send email."
+        
+        return jsonify({"success": True, "message": msg, "email": email})
+
+    except mysql.connector.Error as err:
+        return jsonify({"success": False, "message": f"Database error: {err}"}), 500
+    finally:
+        if 'cursor' in locals() and cursor: cursor.close()
+        if 'conn' in locals() and conn.is_connected(): conn.close()
+
+@app.route('/api/verify-otp', methods=['POST'])
+def verify_otp():
+    data = request.json
+    email = data.get('Email')
+    entered_otp = data.get('OTP')
+    role = data.get('role')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        if role == 'Student':
+            cursor.execute("SELECT * FROM Students WHERE Email = %s", (email,))
+            user = cursor.fetchone()
+            if user and user['verification_token'] == entered_otp:
+                cursor.execute("UPDATE Students SET is_verified = TRUE, verification_token = NULL WHERE Email = %s", (email,))
+                conn.commit()
+                return jsonify({"success": True, "redirect": "Option.html", "user": user})
+        elif role == 'Administrator':
+            cursor.execute("SELECT * FROM Administrators WHERE Email = %s", (email,))
+            user = cursor.fetchone()
+            if user and user['verification_token'] == entered_otp:
+                cursor.execute("UPDATE Administrators SET is_verified = TRUE, verification_token = NULL WHERE Email = %s", (email,))
+                conn.commit()
+                return jsonify({"success": True, "redirect": "admin.html", "user": user})
+
+        return jsonify({"success": False, "message": "Invalid verification code."}), 400
     except mysql.connector.Error as err:
         return jsonify({"success": False, "message": f"Database error: {err}"}), 500
     finally:
@@ -164,11 +277,16 @@ def login():
             cursor.execute("SELECT * FROM Students WHERE Email = %s AND Password = %s", (email, password))
             user = cursor.fetchone()
             if user:
+                if not user['is_verified']:
+                    return jsonify({"success": False, "message": "Please verify your email first before logging in."}), 403
                 return jsonify({"success": True, "message": "Login successful!", "user": user, "redirect": "Option.html"})
+                
         elif role == 'Administrator':
             cursor.execute("SELECT * FROM Administrators WHERE Email = %s AND Password = %s", (email, password))
             user = cursor.fetchone()
             if user:
+                if not user['is_verified']:
+                    return jsonify({"success": False, "message": "Please verify your email first before logging in."}), 403
                 return jsonify({"success": True, "message": "Login successful!", "user": user, "redirect": "admin.html"})
 
         return jsonify({"success": False, "message": "Invalid email or password."}), 401
@@ -231,11 +349,13 @@ def delete_course(course_code):
 # ==================== Student & Enrollment APIs ====================
 @app.route('/api/students', methods=['GET'])
 def get_students():
+    """Fetches all registered students for the administrator dashboard."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT Student_ID, First_Name, Last_Name, Email, Academic_Year, created_at FROM Students")
-        return jsonify({"success": True, "students": cursor.fetchall()})
+        cursor.execute("SELECT Student_ID, First_Name, Last_Name, Email, Academic_Year, is_verified, created_at FROM Students")
+        students = cursor.fetchall()
+        return jsonify({"success": True, "students": students})
     except mysql.connector.Error as err:
         return jsonify({"success": False, "message": f"Database error: {err}"}), 500
     finally:
@@ -244,6 +364,7 @@ def get_students():
 
 @app.route('/api/students/<student_id>', methods=['DELETE'])
 def delete_student(student_id):
+    """Deletes a student from the database."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
