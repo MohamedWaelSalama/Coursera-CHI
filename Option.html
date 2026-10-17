@@ -8,9 +8,12 @@
 
     <header style="display: flex; justify-content: space-between; align-items: center; background-color: #324725; padding: 12px 24px;">
         <h1 style="margin: 0; font-size: 24px;">Coursera CHI</h1>
-        <a href="profile.html" title="View Profile and Grades">
-            <img src="Images/Gemenai 2.jpg" alt="Profile Icon" width="50" style="border-radius: 50%; display: block; cursor: pointer;">
-        </a>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="profile.html" title="View Profile and Grades">
+                <img src="Images/Gemenai 2.jpg" alt="Profile Icon" width="50" style="border-radius: 50%; display: block; cursor: pointer;">
+            </a>
+            <button onclick="logout()" style="background-color: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;">Log Out</button>
+        </div>
     </header>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 24px;">
@@ -25,5 +28,11 @@
         </a>
     </div>
 
+    <script>
+        function logout() {
+            localStorage.removeItem("currentUser");
+            window.location.href = "auth.html";
+        }
+    </script>
 </body>
 </html>
