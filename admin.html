@@ -8,10 +8,16 @@
 
     <header style="display: flex; justify-content: space-between; align-items: center; background-color: #324725; padding: 12px 24px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-            <a href="auth.html" style="color: #9ca3af; text-decoration: none; font-size: 20px;">&larr; Logout</a>
             <h1 style="margin: 0; font-size: 24px;">Administrator Portal</h1>
         </div>
-        <span style="font-size: 14px; background-color: #1f2937; padding: 6px 12px; border-radius: 6px;">Admin Mode</span>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 14px; background-color: #1f2937; padding: 6px 12px; border-radius: 6px;">Admin Mode</span>
+            <!-- Profile Icon linking to profile.html -->
+            <a href="profile.html" title="View Administrator Profile">
+                <img src="Images/Gemenai 2.jpg" alt="Profile Icon" width="45" style="border-radius: 50%; display: block; cursor: pointer;">
+            </a>
+            <button onclick="logout()" style="background-color: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;">Log Out</button>
+        </div>
     </header>
 
     <main style="max-width: 1100px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 40px;">
@@ -20,7 +26,7 @@
         <section style="background-color: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 24px;">
             <h2 style="color: #f9fafb; font-size: 20px; margin-top: 0; margin-bottom: 16px;">Course Management (MySQL Database)</h2>
             
-            <form id="addCourseForm" onsubmit="handleAddCourse(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; background-color: #111827; padding: 16px; border-radius: 8px; border: 1px solid #374151;">
+            <form id="addCourseForm" onsubmit="handleAddCourse(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; background-color: #111827; padding: 16px; border-radius: 8px; border: 1px solid #374151;">
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Course Code</label>
                     <input type="text" id="courseCode" placeholder="e.g. CS401" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
@@ -47,6 +53,18 @@
                         <option value="Thursday">Thursday</option>
                     </select>
                 </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Start Time</label>
+                    <input type="text" id="courseStartTime" placeholder="e.g. 09:00 AM" value="09:00 AM" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">End Time</label>
+                    <input type="text" id="courseEndTime" placeholder="e.g. 10:30 AM" value="10:30 AM" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #9ca3af; margin-bottom: 4px;">Location</label>
+                    <input type="text" id="courseLocation" placeholder="e.g. Lec 101" value="Lec 101" required style="width: 100%; padding: 8px; background-color: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; box-sizing: border-box;">
+                </div>
                 <div style="grid-column: 1 / -1; text-align: right; margin-top: 8px;">
                     <button type="submit" style="background-color: #324725; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">+ Add New Course</button>
                 </div>
@@ -61,6 +79,8 @@
                             <th style="padding: 10px 14px;">Credits</th>
                             <th style="padding: 10px 14px;">Capacity</th>
                             <th style="padding: 10px 14px;">Day</th>
+                            <th style="padding: 10px 14px;">Time</th>
+                            <th style="padding: 10px 14px;">Location</th>
                             <th style="padding: 10px 14px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
@@ -92,6 +112,11 @@
     </main>
 
     <script>
+        function logout() {
+            localStorage.removeItem("currentUser");
+            window.location.href = "auth.html";
+        }
+
         async function fetchCourses() {
             try {
                 const res = await fetch('https://localhost:3000/api/courses');
@@ -109,6 +134,8 @@
                             <td style="padding: 10px 14px;">${c.Credit_Hours}</td>
                             <td style="padding: 10px 14px;">${c.Max_Capacity}</td>
                             <td style="padding: 10px 14px;">${c.Day || 'Sunday'}</td>
+                            <td style="padding: 10px 14px;">${c.Start_Time || '09:00 AM'} - ${c.End_Time || '10:30 AM'}</td>
+                            <td style="padding: 10px 14px;">${c.Location || 'Lec 101'}</td>
                             <td style="padding: 10px 14px; text-align: center;">
                                 <button onclick="deleteCourse('${c.Course_Code}')" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px;">Delete</button>
                             </td>
@@ -116,7 +143,7 @@
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 16px; text-align: center; color: #9ca3af;">No courses found in database.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="padding: 16px; text-align: center; color: #9ca3af;">No courses found in database.</td></tr>`;
                 }
             } catch (err) {
                 console.error("Failed to load courses", err);
@@ -130,7 +157,10 @@
                 Course_Name: document.getElementById("courseName").value.trim(),
                 Credit_Hours: parseInt(document.getElementById("courseCredits").value) || 3,
                 Max_Capacity: parseInt(document.getElementById("courseCapacity").value) || 45,
-                Day: document.getElementById("courseDay").value
+                Day: document.getElementById("courseDay").value,
+                Start_Time: document.getElementById("courseStartTime").value.trim() || '09:00 AM',
+                End_Time: document.getElementById("courseEndTime").value.trim() || '10:30 AM',
+                Location: document.getElementById("courseLocation").value.trim() || 'Lec 101'
             };
 
             try {
