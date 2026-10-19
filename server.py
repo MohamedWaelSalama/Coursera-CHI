@@ -11,7 +11,7 @@ CORS(app)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'enter Your MYSQL password here',
+    'password': 'Your my SQL password',
 }
 
 SMTP_SERVER = "smtp.gmail.com"
@@ -292,6 +292,49 @@ def login():
         return jsonify({"success": False, "message": "Invalid email or password."}), 401
     except mysql.connector.Error as err:
         return jsonify({"success": False, "message": f"Database error: {err}"}), 500
+    finally:
+        if 'cursor' in locals() and cursor: cursor.close()
+        if 'conn' in locals() and conn.is_connected(): conn.close()
+
+# ==================== Forgot Password API (ADDED) ====================
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.json
+    role = data.get('role')
+    email = data.get('Email')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        user = None
+
+        if role == 'Student':
+            cursor.execute("SELECT Password FROM Students WHERE Email = %s", (email,))
+            user = cursor.fetchone()
+        elif role == 'Administrator':
+            cursor.execute("SELECT Password FROM Administrators WHERE Email = %s", (email,))
+            user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"success": False, "message": "No account found with this email."}), 404
+
+        retrieved_password = user['Password']
+
+        msg_body = f"Hello,\n\nYou requested your password for your Coursera CHI account.\nYour password is: {retrieved_password}\n\nIf you did not request this, please ignore this email."
+        msg = MIMEText(msg_body, 'plain', 'utf-8')
+        msg['Subject'] = "Your Password Recovery"
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = email
+
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+
+        return jsonify({"success": True, "message": "Your password has been sent to your email successfully!"})
+    except Exception as err:
+        return jsonify({"success": False, "message": f"Error sending password email: {err}"}), 500
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if 'conn' in locals() and conn.is_connected(): conn.close()
