@@ -127,6 +127,28 @@
       .submit-btn:hover {
         background-color: #0e7490;
       }
+      .forgot-password-link {
+        display: block;
+        text-align: right;
+        margin-top: -10px;
+        margin-bottom: 14px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .forgot-password-link:hover {
+        color: #ffffff;
+      }
+      .back-to-login {
+        display: block;
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        text-decoration: underline;
+        cursor: pointer;
+      }
       .status-banner {
         margin-top: 20px;
         padding: 12px;
@@ -206,6 +228,9 @@
           <input type="password" id="regPassword" placeholder="Enter password" required />
         </div>
 
+        <!-- Forgot Password Link (Visible on Login Mode) -->
+        <span id="forgotPasswordLink" class="forgot-password-link hidden" onclick="showForgotPasswordView()">Forgot Password?</span>
+
         <!-- OTP Verification Section (Hidden Initially) -->
         <div id="otpSection" class="hidden">
           <div class="form-group">
@@ -213,6 +238,12 @@
             <input type="text" id="otpInput" placeholder="e.g. 482910" maxlength="6" />
           </div>
           <button type="button" class="submit-btn" onclick="verifyOtpCode()">Verify Code & Enter</button>
+        </div>
+
+        <!-- Forgot Password Request Section (Hidden Initially) -->
+        <div id="forgotPasswordSection" class="hidden">
+          <button type="button" class="submit-btn" onclick="submitForgotPassword()">Send Password to Email</button>
+          <span class="back-to-login" onclick="switchMode('login')">Back to Log In</span>
         </div>
 
         <button type="submit" class="submit-btn" id="submitBtn">Register Account</button>
@@ -235,8 +266,16 @@
         const formTitle = document.getElementById("formTitle");
         const submitBtn = document.getElementById("submitBtn");
         const registerFields = document.getElementById("registerFields");
+        const forgotLink = document.getElementById("forgotPasswordLink");
+        const forgotSection = document.getElementById("forgotPasswordSection");
+        const passwordGroup = document.getElementById("passwordGroup");
 
         document.getElementById("regStatusBanner").classList.add("hidden");
+        forgotSection.classList.add("hidden");
+        passwordGroup.style.display = "block";
+        submitBtn.style.display = "block";
+        document.getElementById("modeSelectorContainer").style.display = "flex";
+        document.getElementById("roleSelectorContainer").style.display = "flex";
 
         if (mode === "register") {
           regBtn.classList.add("active");
@@ -244,12 +283,60 @@
           formTitle.textContent = "New Account Registration";
           submitBtn.textContent = "Register Account";
           registerFields.style.display = "block";
+          forgotLink.classList.add("hidden");
         } else {
           logBtn.classList.add("active");
           regBtn.classList.remove("active");
           formTitle.textContent = "Existing User Login";
           submitBtn.textContent = "Log In";
           registerFields.style.display = "none";
+          forgotLink.classList.remove("hidden");
+        }
+      }
+
+      function showForgotPasswordView() {
+        currentMode = "forgot";
+        document.getElementById("formTitle").textContent = "Password Recovery";
+        document.getElementById("registerFields").style.display = "none";
+        document.getElementById("passwordGroup").style.display = "none";
+        document.getElementById("submitBtn").style.display = "none";
+        document.getElementById("forgotPasswordLink").classList.add("hidden");
+        document.getElementById("modeSelectorContainer").style.display = "none";
+        document.getElementById("forgotPasswordSection").classList.remove("hidden");
+        document.getElementById("regStatusBanner").classList.add("hidden");
+      }
+
+      async function submitForgotPassword() {
+        const banner = document.getElementById("regStatusBanner");
+        const statusText = document.getElementById("regStatusText");
+        const emailVal = document.getElementById("regEmail").value.trim();
+
+        banner.classList.remove("hidden", "success", "error");
+
+        if (!emailVal) {
+          banner.classList.add("error");
+          statusText.textContent = "Please enter your email address.";
+          return;
+        }
+
+        try {
+          const response = await fetch('https://localhost:3000/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: selectedEntityRole, Email: emailVal })
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            banner.classList.add("success");
+            statusText.textContent = result.message;
+          } else {
+            banner.classList.add("error");
+            statusText.textContent = result.message || "Failed to retrieve password.";
+          }
+        } catch (err) {
+          banner.classList.add("error");
+          statusText.textContent = "Server connection error.";
         }
       }
 
@@ -325,7 +412,6 @@
               banner.classList.add("success");
               statusText.textContent = "Check your email for the 6-digit code and enter it below.";
               
-              // Hide registration fields & show OTP verification box in the same tab!
               document.getElementById("registerFields").style.display = "none";
               document.getElementById("passwordGroup").style.display = "none";
               document.getElementById("submitBtn").style.display = "none";
